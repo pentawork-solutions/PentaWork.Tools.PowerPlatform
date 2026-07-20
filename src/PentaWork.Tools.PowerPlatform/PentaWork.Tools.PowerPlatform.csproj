@@ -13,7 +13,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>pw-pp</ToolCommandName>
     <PackageId>PentaWork.Tools.PowerPlatform</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>Gerrit Gazic</Authors>
     <Company>PentaWork Solutions GmbH &amp; Co. KG</Company>
     <Description>Cross-platform dotnet-tool CLI for Power Platform / Dataverse automation: solution export/import, entity export/import, sharings, relations, webresource/assembly updates, proxy generation and plugin call-graph analysis.</Description>
