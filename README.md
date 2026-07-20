@@ -58,15 +58,17 @@ Available on every command:
 |---|---|
 | `connection test` | Verify the connection string resolves and authenticates. |
 | `solution list` | List installed, visible solutions. |
-| `solution export <unique-name> --output-dir <dir>` | Export a solution to a zip file. |
+| `solution export <unique-name> --output-dir <dir> [--extract-dir <dir> --clean]` | Export a solution to a zip file (optionally extracted). |
 | `solution import <zip>` | Import a solution from a zip file. |
 | `entity export <logical-name>` | Export entity instances (with columns, filters, relations, sharings) to JSON. |
 | `entity import` | Import entity instances from JSON. |
 | `entity remove <logical-name>` | **Destructive.** Delete entity instances matching a filter. |
+| `data export --config <file> --output-dir <dir>` | Export configured entity data sets into one JSON file per item. |
+| `data import --config <file> --input-dir <dir> --fallback-owner-type <type> --fallback-owner-id <guid>` | Import configured entity data sets. |
 | `relation import` | Import N:M relations from JSON. |
 | `sharing import` | Import entity sharings (POA) from JSON. |
 | `user-object list` | List per-user views, dashboards and charts. |
-| `proxy generate` | Generate C#/TypeScript proxy and FakeXrmEasy fake classes from live metadata. |
+| `proxy generate [--csharp-output-dir <dir>] [--fake-output-dir <dir>] [--typescript-output-dir <dir>]` | Generate C#/TypeScript proxy and FakeXrmEasy fake classes from live metadata. |
 | `plugin-graph export` | Analyze plugin call graphs and render Markdown reports. |
 | `assembly update <dll>` | Update a plugin assembly's content/version. |
 | `webresource update <file> --name <name>` | Create or update a web resource. |
@@ -96,6 +98,81 @@ cat userquery.json | pw-pp entity import \
   --fallback-owner-id 00000000-0000-0000-0000-000000000001 \
   --map-by-name
 ```
+
+### Data workflow configuration
+
+`data export` and `data import` use a shared configuration file (JSON) that describes which entities to
+process and how. All arrays are optional and may be empty. `FileName` must not contain a file extension
+or a path — it is used as the basename for the exported/imported JSON file.
+
+```json
+{
+  "Items": [
+    {
+      "FileName": "01 - Countries",
+      "LogicalName": "new_country",
+      "Filters": ["statecode:Equal:0"],
+      "IgnoreColumns": ["ownerid"],
+      "Relations": ["new_country_new_region"],
+      "Sharings": false,
+      "MapByName": true,
+      "MapByNameLookups": ["transactioncurrencyid"],
+      "CreateOnly": [],
+      "ImpersonateOwner": false,
+      "PurgeTarget": false
+    }
+  ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `FileName` | Basename for the export/import JSON file (no extension, no path). |
+| `LogicalName` | The target entity logical name. |
+| `Filters` | [Filter triples](#filter-triples) applied on export. |
+| `IgnoreColumns` | Columns to skip on export. |
+| `Relations` | Relation schema names to follow on export and re-import from the source JSON. |
+| `Sharings` | `true` to export/import shared access (POA) records. |
+| `MapByName` | `true` activates `MapByName` during import; also enables `TakeFirst` fallback. |
+| `MapByNameLookups` | Specific lookup columns that should be resolved by name during import. |
+| `CreateOnly` | Columns that are only set on create, never on update. |
+| `ImpersonateOwner` | `true` to preserve the original owner on import. |
+| `PurgeTarget` | `true` to delete all existing instances of this entity before import. |
+
+### Examples
+
+**Data export workflow:**
+
+```
+pw-pp data export --config config.json --output-dir ./data --connection-string "$SOURCE"
+```
+
+**Data import workflow:**
+
+```
+pw-pp data import --config config.json --input-dir ./data --fallback-owner-type systemuser --fallback-owner-id 00000000-0000-0000-0000-000000000001 --connection-string "$TARGET"
+```
+
+**Solution export with automatic extraction:**
+
+```
+pw-pp solution export MySolution --output-dir ./solutions --extract-dir ./solutions/extracted --clean --connection-string "$SOURCE"
+```
+
+**Proxy generation with explicit output targets:**
+
+```
+pw-pp proxy generate --proxy-namespace My.Proxies --fake-namespace My.Fakes --output-dir ./staging --csharp-output-dir ./src/Proxies --fake-output-dir ./tests/Fakes --typescript-output-dir ./ts/Proxies --clear --connection-string "$SOURCE"
+```
+
+Each proxy output option is independent: an explicitly supplied target is used for that artifact type,
+while omitted C#, fake, or TypeScript targets fall back to `CS/`, `Fake/`, or `TS/` below `--output-dir`.
+Each effective target is independently validated by `--clear` against the root/workspace guard — the
+guard never allows deleting the filesystem root or the current working directory.
+
+`solution export --extract-dir <dir>` preserves unrelated existing files in `<dir>` and overwrites
+files included in the ZIP. Add `--clean` to delete `<dir>` first; `--clean` requires `--extract-dir`
+and uses the same root/workspace safety guard as the other destructive output options.
 
 ### Filter triples
 

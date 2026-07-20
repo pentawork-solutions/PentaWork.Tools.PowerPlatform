@@ -11,7 +11,7 @@ namespace PentaWork.Tools.PowerPlatform.Commands
     {
         public override ValueTask ExecuteAsync(IConsole console) =>
             RunWithConnectionAsync(console, null, (connection, output) =>
-                ProxyOperations.Generate(connection, new ProxyOperations.ProxyGenerateRequest(ProxyNamespace, FakeNamespace, Solution, Include, Exclude, OutputDirectory, Clear, UseBaseProxy), output));
+                ProxyOperations.Generate(connection, new ProxyOperations.ProxyGenerateRequest(ProxyNamespace, FakeNamespace, Solution, Include, Exclude, OutputDirectory, Clear, UseBaseProxy, CSharpOutputDirectory, FakeOutputDirectory, TypeScriptOutputDirectory), output));
 
         [CommandOption("proxy-namespace", Description = "Namespace for the generated C# proxy classes.")]
         public required string ProxyNamespace { get; set; }
@@ -36,5 +36,14 @@ namespace PentaWork.Tools.PowerPlatform.Commands
 
         [CommandOption("use-base-proxy", Description = "Generate a shared BaseProxy.cs with change tracking.")]
         public bool UseBaseProxy { get; set; }
+
+        [CommandOption("csharp-output-dir", Description = "Write C# proxy output directly to this directory.")]
+        public string? CSharpOutputDirectory { get; set; }
+
+        [CommandOption("fake-output-dir", Description = "Write FakeXrmEasy fake output directly to this directory.")]
+        public string? FakeOutputDirectory { get; set; }
+
+        [CommandOption("typescript-output-dir", Description = "Write TypeScript proxy output directly to this directory.")]
+        public string? TypeScriptOutputDirectory { get; set; }
     }
 }
