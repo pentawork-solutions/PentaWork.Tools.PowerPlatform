@@ -16,8 +16,8 @@ namespace PentaWork.Tools.PowerPlatform.Operations
     /// instead of extracting to a temp directory.</summary>
     internal static class SolutionOperations
     {
-        internal record SolutionExportRequest(string UniqueName, string OutputDirectory, bool Managed, bool PublishAll, bool Force);
-        internal record SolutionExportResult(string FilePath, bool Skipped);
+        internal record SolutionExportRequest(string UniqueName, string OutputDirectory, bool Managed, bool PublishAll, bool Force, string? ExtractDirectory, bool CleanExtractDirectory);
+        internal record SolutionExportResult(string FilePath, bool Skipped, string? ExtractDirectory);
         internal record SolutionImportRequest(string SolutionFilePath, bool DeleteExisting, bool Overwrite, bool PublishWorkflows, bool Force);
         internal record SolutionImportResult(string SolutionName, string SolutionVersion, bool Imported, string? SkipReason);
 
@@ -54,6 +54,8 @@ namespace PentaWork.Tools.PowerPlatform.Operations
 
         public static SolutionExportResult Export(ServiceClient connection, SolutionExportRequest request, IOperationOutput output)
         {
+            ValidateExtractOptions(request.ExtractDirectory, request.CleanExtractDirectory);
+
             if (request.PublishAll) connection.Execute(new PublishAllXmlRequest());
 
             var solutionVersion = RetrieveSolutionVersionString(connection, request.UniqueName)
@@ -66,7 +68,8 @@ namespace PentaWork.Tools.PowerPlatform.Operations
             if (File.Exists(solutionFilePath) && !request.Force)
             {
                 output.WriteWarning("Solution already existing in target path. Skipping ...");
-                var skippedResult = new SolutionExportResult(solutionFilePath, Skipped: true);
+                MaybeExtract(request.ExtractDirectory, request.CleanExtractDirectory, solutionFilePath);
+                var skippedResult = new SolutionExportResult(solutionFilePath, Skipped: true, ExtractDirectory: request.ExtractDirectory);
                 output.WriteObject(skippedResult);
                 return skippedResult;
             }
@@ -86,7 +89,8 @@ namespace PentaWork.Tools.PowerPlatform.Operations
 
             output.WriteProgress("Exporting", "Done!", completed: true);
 
-            var result = new SolutionExportResult(solutionFilePath, Skipped: false);
+            MaybeExtract(request.ExtractDirectory, request.CleanExtractDirectory, solutionFilePath);
+            var result = new SolutionExportResult(solutionFilePath, Skipped: false, ExtractDirectory: request.ExtractDirectory);
             output.WriteObject(result);
             return result;
         }
@@ -105,6 +109,35 @@ namespace PentaWork.Tools.PowerPlatform.Operations
         }
 
         #endregion
+
+        /// <summary>
+        /// Extracts a solution ZIP into a directory. Protects the filesystem and workspace roots
+        /// from deletion through <see cref="ClearGuard.EnsureSafeToClear"/>.
+        /// </summary>
+        internal static void ValidateExtractOptions(string? extractDirectory, bool cleanExtractDirectory)
+        {
+            if (cleanExtractDirectory && string.IsNullOrWhiteSpace(extractDirectory))
+                throw new CliValidationException("--clean requires --extract-dir.");
+        }
+
+        internal static void ExtractZip(string zipPath, string extractDirectory, bool cleanExtractDirectory)
+        {
+            if (cleanExtractDirectory)
+            {
+                ClearGuard.EnsureSafeToClear(extractDirectory);
+                if (Directory.Exists(extractDirectory))
+                    Directory.Delete(extractDirectory, recursive: true);
+            }
+
+            Directory.CreateDirectory(extractDirectory);
+            ZipFile.ExtractToDirectory(zipPath, extractDirectory, overwriteFiles: true);
+        }
+
+        private static void MaybeExtract(string? extractDirectory, bool cleanExtractDirectory, string solutionFilePath)
+        {
+            if (!string.IsNullOrEmpty(extractDirectory))
+                ExtractZip(solutionFilePath, extractDirectory, cleanExtractDirectory);
+        }
 
         #region Import
 

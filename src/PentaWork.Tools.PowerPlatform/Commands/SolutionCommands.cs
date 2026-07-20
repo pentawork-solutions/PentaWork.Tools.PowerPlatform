@@ -21,7 +21,7 @@ namespace PentaWork.Tools.PowerPlatform.Commands
     {
         public override ValueTask ExecuteAsync(IConsole console) =>
             RunWithConnectionAsync(console, null, (connection, output) =>
-                SolutionOperations.Export(connection, new SolutionOperations.SolutionExportRequest(UniqueName, OutputDirectory, Managed, PublishAll, Force), output));
+                SolutionOperations.Export(connection, new SolutionOperations.SolutionExportRequest(UniqueName, OutputDirectory, Managed, PublishAll, Force, ExtractDirectory, Clean), output));
 
         [CommandParameter(0, Name = "unique-name", Description = "Unique name of the solution to export.")]
         public required string UniqueName { get; set; }
@@ -37,6 +37,12 @@ namespace PentaWork.Tools.PowerPlatform.Commands
 
         [CommandOption("force", Description = "Export even if a zip for this version already exists.")]
         public bool Force { get; set; }
+
+        [CommandOption("extract-dir", Description = "Extract the exported solution ZIP into this directory.")]
+        public string? ExtractDirectory { get; set; }
+
+        [CommandOption("clean", Description = "DESTRUCTIVE: clear --extract-dir before extracting.")]
+        public bool Clean { get; set; }
     }
 
     [Command("solution import", Description = "Import a solution from a zip file.")]

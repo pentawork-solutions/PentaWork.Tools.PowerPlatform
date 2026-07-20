@@ -24,10 +24,18 @@ namespace PentaWork.Tools.PowerPlatform.Operations
             IReadOnlyList<string> ExcludeEntities,
             string OutputPath,
             bool Clear,
-            bool UseBaseProxy)
+            bool UseBaseProxy,
+            string? CSharpOutputDirectory,
+            string? FakeOutputDirectory,
+            string? TypeScriptOutputDirectory)
         {
             public string CSOutputPath => Path.Combine(OutputPath, "CS");
             public string TSOutputPath => Path.Combine(OutputPath, "TS");
+
+            public string EffectiveCSOutputPath => CSharpOutputDirectory ?? CSOutputPath;
+            public string EffectiveFakeOutputPath => FakeOutputDirectory ?? Path.Combine(OutputPath, "Fake");
+            public string EffectiveTSOutputPath => TypeScriptOutputDirectory ?? TSOutputPath;
+            public bool HasDirectOutputTargets => CSharpOutputDirectory is not null || FakeOutputDirectory is not null || TypeScriptOutputDirectory is not null;
         }
 
         internal record ProxyGenerateResult(string OutputPath, int EntityCount);
@@ -36,8 +44,23 @@ namespace PentaWork.Tools.PowerPlatform.Operations
         {
             if (request.Clear)
             {
-                ClearGuard.EnsureSafeToClear(request.OutputPath);
-                if (Directory.Exists(request.OutputPath)) Directory.Delete(request.OutputPath, true);
+                var clearPaths = new List<string>();
+                if (request.HasDirectOutputTargets)
+                {
+                    clearPaths.Add(request.EffectiveCSOutputPath);
+                    clearPaths.Add(request.EffectiveFakeOutputPath);
+                    clearPaths.Add(request.EffectiveTSOutputPath);
+                }
+                else
+                {
+                    clearPaths.Add(request.OutputPath);
+                }
+
+                foreach (var path in clearPaths.Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    ClearGuard.EnsureSafeToClear(path);
+                    if (Directory.Exists(path)) Directory.Delete(path, true);
+                }
             }
 
             var sdkMessages = GetAllSdkMessages(connection, output);
@@ -55,8 +78,9 @@ namespace PentaWork.Tools.PowerPlatform.Operations
             var entityInfoList = new EntityInfoList(filteredEntityMetadata, systemForms, actions);
 
             EnsureFolder(request.OutputPath);
-            EnsureFolder(request.CSOutputPath);
-            EnsureFolder(request.TSOutputPath);
+            EnsureFolder(request.EffectiveCSOutputPath);
+            EnsureFolder(request.EffectiveFakeOutputPath);
+            EnsureFolder(request.EffectiveTSOutputPath);
 
             GenerateBaseClasses(request, output);
             GenerateAllCSharp(entityInfoList, request, output);
@@ -181,43 +205,43 @@ namespace PentaWork.Tools.PowerPlatform.Operations
             if (request.UseBaseProxy)
             {
                 output.WriteProgress("Generating", "Generating Base Proxy ...", 40);
-                File.WriteAllText(Path.Combine(request.CSOutputPath, "BaseProxy.cs"), ScribanTemplateRenderer.Render("CSharp.BaseProxy", new { request.ProxyNamespace }));
+                File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "BaseProxy.cs"), ScribanTemplateRenderer.Render("CSharp.BaseProxy", new { request.ProxyNamespace }));
             }
 
             output.WriteProgress("Generating", "Generating Attributes ...", 40);
-            File.WriteAllText(Path.Combine(request.CSOutputPath, "Attributes.cs"), ScribanTemplateRenderer.Render("CSharp.Attributes", new { request.ProxyNamespace }));
+            File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "Attributes.cs"), ScribanTemplateRenderer.Render("CSharp.Attributes", new { request.ProxyNamespace }));
 
-            File.WriteAllText(Path.Combine(request.CSOutputPath, "AssemblyInfoAddition.cs"), ScribanTemplateRenderer.Render("CSharp.AssemblyInfoAddition", new { }));
+            File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "AssemblyInfoAddition.cs"), ScribanTemplateRenderer.Render("CSharp.AssemblyInfoAddition", new { }));
 
             output.WriteProgress("Generating", "Generating Extensions ...", 45);
-            EnsureFolder(Path.Combine(request.CSOutputPath, "Extensions"));
+            EnsureFolder(Path.Combine(request.EffectiveCSOutputPath, "Extensions"));
 
-            File.WriteAllText(Path.Combine(request.CSOutputPath, "Extensions", "EnumExtensions.cs"), ScribanTemplateRenderer.Render("CSharp.EnumExtensions", new { request.ProxyNamespace }));
+            File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "Extensions", "EnumExtensions.cs"), ScribanTemplateRenderer.Render("CSharp.EnumExtensions", new { request.ProxyNamespace }));
         }
 
         internal static void GenerateAllCSharp(EntityInfoList entityInfoList, ProxyGenerateRequest request, IOperationOutput output)
         {
             output.WriteProgress("Generating", "[CS] Generating Proxy & Fake Classes ...", 50);
-            EnsureFolder(Path.Combine(request.CSOutputPath, "Entities"));
-            EnsureFolder(Path.Combine(request.OutputPath, "Fake"));
+            EnsureFolder(Path.Combine(request.EffectiveCSOutputPath, "Entities"));
+            EnsureFolder(request.EffectiveFakeOutputPath);
             foreach (var entityInfo in entityInfoList)
             {
                 var optionSetEnumsCs = string.Join(Environment.NewLine,
                     entityInfo.OptionSetList.Select(os => ScribanTemplateRenderer.Render("CSharp.OptionSet", new { OptionSetInfo = os })));
-                File.WriteAllText(Path.Combine(request.CSOutputPath, "Entities", $"{entityInfo.UniqueDisplayName}.cs"),
+                File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "Entities", $"{entityInfo.UniqueDisplayName}.cs"),
                     ScribanTemplateRenderer.Render("CSharp.ProxyClass", new { EntityInfo = entityInfo, request.ProxyNamespace, request.UseBaseProxy, OptionSetEnumsCs = optionSetEnumsCs }));
 
-                File.WriteAllText(Path.Combine(request.OutputPath, "Fake", $"{entityInfo.UniqueDisplayName}.cs"),
+                File.WriteAllText(Path.Combine(request.EffectiveFakeOutputPath, $"{entityInfo.UniqueDisplayName}.cs"),
                     ScribanTemplateRenderer.Render("CSharp.Fake", new { EntityInfo = entityInfo, request.ProxyNamespace, request.FakeNamespace }));
             }
 
             output.WriteProgress("Generating", "[CS] Generating Relation Classes ...", 65);
-            EnsureFolder(Path.Combine(request.CSOutputPath, "Relations"));
+            EnsureFolder(Path.Combine(request.EffectiveCSOutputPath, "Relations"));
             // Group by intersect entity. It is possible, that multiple schemas are using the same intersect entity!
             foreach (var relationInfoGroup in entityInfoList.SelectMany(e => e.ManyToManyRelationList).GroupBy(e => e.IntersectEntityName))
             {
                 var relationInfo = relationInfoGroup.First();
-                File.WriteAllText(Path.Combine(request.CSOutputPath, "Relations", $"{relationInfo.UniqueIntersectDisplayName}.cs"),
+                File.WriteAllText(Path.Combine(request.EffectiveCSOutputPath, "Relations", $"{relationInfo.UniqueIntersectDisplayName}.cs"),
                     ScribanTemplateRenderer.Render("CSharp.RelationProxyClass", new { RelationClassInfo = relationInfo, request.ProxyNamespace, request.UseBaseProxy }));
             }
         }
@@ -225,31 +249,31 @@ namespace PentaWork.Tools.PowerPlatform.Operations
         internal static void GenerateAllJavascript(EntityInfoList entityInfoList, ProxyGenerateRequest request, IOperationOutput output)
         {
             output.WriteProgress("Generating", "[TS] Generating Proxy Base Types ...", 75);
-            File.WriteAllText(Path.Combine(request.TSOutputPath, "ProxyTypes.ts"), ScribanTemplateRenderer.Render("Javascript.ProxyTypes", new { }));
+            File.WriteAllText(Path.Combine(request.EffectiveTSOutputPath, "ProxyTypes.ts"), ScribanTemplateRenderer.Render("Javascript.ProxyTypes", new { }));
 
             output.WriteProgress("Generating", "[TS] Generating Entity Proxies...", 85);
-            EnsureFolder(Path.Combine(request.TSOutputPath, "Entities"));
+            EnsureFolder(Path.Combine(request.EffectiveTSOutputPath, "Entities"));
             foreach (var entityInfo in entityInfoList)
             {
                 var optionSetEnumsJs = string.Join(Environment.NewLine,
                     entityInfo.OptionSetList.Select(os => ScribanTemplateRenderer.Render("Javascript.OptionSetJS", new { OptionSetInfo = os })));
-                File.WriteAllText(Path.Combine(request.TSOutputPath, "Entities", $"{entityInfo.UniqueDisplayName}.ts"),
+                File.WriteAllText(Path.Combine(request.EffectiveTSOutputPath, "Entities", $"{entityInfo.UniqueDisplayName}.ts"),
                     ScribanTemplateRenderer.Render("Javascript.ProxyClassJS", new { EntityInfo = entityInfo, OptionSetEnumsJs = optionSetEnumsJs }));
             }
 
             output.WriteProgress("Generating", "[TS] Generating Attribute Name Modules...", 90);
-            EnsureFolder(Path.Combine(request.TSOutputPath, "Attributes"));
+            EnsureFolder(Path.Combine(request.EffectiveTSOutputPath, "Attributes"));
             foreach (var entityInfo in entityInfoList)
             {
-                File.WriteAllText(Path.Combine(request.TSOutputPath, "Attributes", $"{entityInfo.UniqueDisplayName}.ts"),
+                File.WriteAllText(Path.Combine(request.EffectiveTSOutputPath, "Attributes", $"{entityInfo.UniqueDisplayName}.ts"),
                     ScribanTemplateRenderer.Render("Javascript.AttributeJS", new { EntityInfo = entityInfo }));
             }
 
             output.WriteProgress("Generating", "[TS] Generating Form Info Modules...", 95);
-            EnsureFolder(Path.Combine(request.TSOutputPath, "FormInfos"));
+            EnsureFolder(Path.Combine(request.EffectiveTSOutputPath, "FormInfos"));
             foreach (var entityInfo in entityInfoList)
             {
-                File.WriteAllText(Path.Combine(request.TSOutputPath, "FormInfos", $"{entityInfo.UniqueDisplayName}.ts"),
+                File.WriteAllText(Path.Combine(request.EffectiveTSOutputPath, "FormInfos", $"{entityInfo.UniqueDisplayName}.ts"),
                     ScribanTemplateRenderer.Render("Javascript.FormInfosJS", new { EntityInfo = entityInfo }));
             }
         }
