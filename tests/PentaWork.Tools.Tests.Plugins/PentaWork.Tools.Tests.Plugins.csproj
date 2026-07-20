@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- These are analysis *fixtures* (real IPlugin implementations dnlib loads and inspects),
+         not a deployable plugin package - no PowerApps MSBuild plugin-packaging step is needed,
+         which keeps this project buildable on any OS instead of only inside Visual Studio. -->
+    <PackageId>PentaWork.Tools.Tests.Plugins</PackageId>
+    <Authors>Gerrit Gazic</Authors>
+    <Company>PentaWork Solutions GmbH &amp; Co. KG</Company>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Always compile unoptimized, regardless of the outer solution's build configuration.
+         PluginGraphVM interprets these fixtures' raw IL, and Release-mode codegen changes the
+         shape of try/catch/finally blocks enough to break the interpreter's expectations (e.g. it
+         no longer sees the same Leave/Pop sequence around a call inside a try block) - the fixtures
+         must stay debug-shaped even when `dotnet test -c Release` builds everything else optimized. -->
+    <Optimize>false</Optimize>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.26" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PentaWork.Tools.Tests.PluginsTestSideAssembly\PentaWork.Tools.Tests.PluginsTestSideAssembly.csproj" />
+  </ItemGroup>
+
+</Project>

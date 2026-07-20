@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>pw-pp</ToolCommandName>
+    <PackageId>PentaWork.Tools.PowerPlatform</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Gerrit Gazic</Authors>
+    <Company>PentaWork Solutions GmbH &amp; Co. KG</Company>
+    <Description>Cross-platform dotnet-tool CLI for Power Platform / Dataverse automation: solution export/import, entity export/import, sharings, relations, webresource/assembly updates, proxy generation and plugin call-graph analysis.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/pentawork-solutions/PentaWork.Tools.PowerPlatform</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pentawork-solutions/PentaWork.Tools.PowerPlatform</RepositoryUrl>
+    <PackageTags>PowerPlatform;Dataverse;Dynamics365;CLI;dotnet-tool</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerPlatform.Dataverse.Client" Version="1.2.26" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Scriban" Version="7.2.5" />
+    <PackageReference Include="System.CodeDom" Version="10.0.9" />
+    <PackageReference Include="CliFx" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PentaWork.Tools.PluginGraphAnalyzer\PentaWork.Tools.PluginGraphAnalyzer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PentaWork.Tools.PowerPlatform.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="XrmProxies\Templates\CSharp\*.sbn" />
+    <EmbeddedResource Include="XrmProxies\Templates\CSharp\*.sbn" />
+    <None Remove="XrmProxies\Templates\Javascript\*.sbn" />
+    <EmbeddedResource Include="XrmProxies\Templates\Javascript\*.sbn" />
+  </ItemGroup>
+
+</Project>

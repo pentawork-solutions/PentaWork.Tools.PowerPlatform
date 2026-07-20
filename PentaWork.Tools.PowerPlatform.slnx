@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PentaWork.Tools.PluginGraphAnalyzer/PentaWork.Tools.PluginGraphAnalyzer.csproj" />
+    <Project Path="src/PentaWork.Tools.PowerPlatform/PentaWork.Tools.PowerPlatform.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PentaWork.Tools.PluginGraphAnalyzer.Tests/PentaWork.Tools.PluginGraphAnalyzer.Tests.csproj" />
+    <Project Path="tests/PentaWork.Tools.PowerPlatform.Tests/PentaWork.Tools.PowerPlatform.Tests.csproj" />
+    <Project Path="tests/PentaWork.Tools.Tests.Plugins/PentaWork.Tools.Tests.Plugins.csproj" />
+    <Project Path="tests/PentaWork.Tools.Tests.PluginsTestSideAssembly/PentaWork.Tools.Tests.PluginsTestSideAssembly.csproj" />
+  </Folder>
+</Solution>
