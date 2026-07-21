@@ -7,12 +7,15 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
 {
     public class EntityInfo
     {
-        private readonly UniqueNameDictionary _varNameDic = new UniqueNameDictionary();
+        private readonly UniqueNameDictionary _varNameDic;
 
         public EntityInfo(EntityMetadata entityMetadata, List<ActionInfo> actionList, string uniqueDisplayName, int languageCode)
         {
-            // Add the LogicalName of the entity to the dictionary - prevent Attribtues named equal to the wrapping type
-            _varNameDic.Add($"entity.{entityMetadata.LogicalName}", uniqueDisplayName);
+            _varNameDic = new UniqueNameDictionary(languageCode)
+            {
+                // Add the LogicalName of the entity to the dictionary - prevent Attribtues named equal to the wrapping type
+                { $"entity.{entityMetadata.LogicalName}", uniqueDisplayName }
+            };
 
             UniqueDisplayName = uniqueDisplayName;
             TypeCode = entityMetadata.ObjectTypeCode;
@@ -73,7 +76,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
                                 a is MultiSelectPicklistAttributeMetadata)
                             .DistinctBy(attr => ((EnumAttributeMetadata)attr).OptionSet.Name)
                             .OrderBy(attr => ((EnumAttributeMetadata)attr).OptionSet.Name)
-                            .Select(osAttr => new OptionSetInfo(((EnumAttributeMetadata)osAttr).OptionSet, _varNameDic.GetUniqueName(((EnumAttributeMetadata)osAttr).OptionSet, languageCode), languageCode))
+                            .Select(osAttr => new OptionSetInfo(((EnumAttributeMetadata)osAttr).OptionSet, _varNameDic.GetUniqueName(((EnumAttributeMetadata)osAttr).OptionSet), languageCode))
                             .ToList();
         }
 
@@ -90,24 +93,24 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
                     case AttributeTypeCode.Status:
                     case AttributeTypeCode.Picklist:
                         var optionSet = OptionSetList.Single(os => os.LogicalName == ((EnumAttributeMetadata)attributeMetadata).OptionSet.Name);
-                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, languageCode), optionSet.UniqueDisplayName, languageCode));
+                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata), optionSet.UniqueDisplayName, languageCode));
                         break;
                     case AttributeTypeCode.Virtual:
                         if (attributeMetadata is MultiSelectPicklistAttributeMetadata multiSelect)
                         {
                             var multiOptionSet = OptionSetList.Single(os => os.LogicalName == multiSelect.OptionSet.Name);
-                            parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, languageCode), multiOptionSet.UniqueDisplayName, languageCode));
+                            parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata), multiOptionSet.UniqueDisplayName, languageCode));
                         }
                         break;
                     case AttributeTypeCode.Money:
                         if (!attributeMetadata.LogicalName.EndsWith("_base")) // Don't add the readonly base money field
-                            parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, languageCode), languageCode));
+                            parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata), languageCode));
                         break;
                     case AttributeTypeCode.Uniqueidentifier:
-                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, languageCode, "Id"), languageCode));
+                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, "Id"), languageCode));
                         break;
                     default:
-                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata, languageCode), languageCode));
+                        parsedAttributes.Add(new AttributeInfo(attributeMetadata, _varNameDic.GetUniqueName(attributeMetadata), languageCode));
                         break;
                 }
             }

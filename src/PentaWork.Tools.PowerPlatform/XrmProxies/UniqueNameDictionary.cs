@@ -6,14 +6,21 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
 {
     public class UniqueNameDictionary : Dictionary<string, string>
     {
-        public string GetUniqueName(EntityMetadata entityMetadata, int languageCode)
+        private readonly int _languageCode;
+
+        public UniqueNameDictionary(int languageCode = -1)
         {
-            return GetUniqueName(entityMetadata.DisplayName.GetLabel(languageCode, entityMetadata.LogicalName), entityMetadata.LogicalName);
+            _languageCode = languageCode;
         }
 
-        public string GetUniqueName(AttributeMetadata attributeMetadata, int languageCode, string suffix = "")
+        public string GetUniqueName(EntityMetadata entityMetadata)
         {
-            return GetUniqueName(attributeMetadata.DisplayName.GetLabel(languageCode, attributeMetadata.LogicalName), attributeMetadata.LogicalName, string.Empty, suffix);
+            return GetUniqueName(entityMetadata.DisplayName.GetLabel(_languageCode, entityMetadata.LogicalName), entityMetadata.LogicalName);
+        }
+
+        public string GetUniqueName(AttributeMetadata attributeMetadata, string suffix = "")
+        {
+            return GetUniqueName(attributeMetadata.DisplayName.GetLabel(_languageCode, attributeMetadata.LogicalName), attributeMetadata.LogicalName, string.Empty, suffix);
         }
 
         public string GetUniqueName(OneToManyRelationshipMetadata metadata)
@@ -26,13 +33,13 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
             return GetUniqueName(metadata.SchemaName, metadata.SchemaName);
         }
 
-        public string GetUniqueName(OptionSetMetadata optionSetMetadata, int languageCode)
+        public string GetUniqueName(OptionSetMetadata optionSetMetadata)
         {
             var prefix = optionSetMetadata.IsGlobal.Value ? "eg" : "e";
-            return GetUniqueName(optionSetMetadata.DisplayName.GetLabel(languageCode, optionSetMetadata.Name), "os_" + optionSetMetadata.Name, prefix);
+            return GetUniqueName(optionSetMetadata.DisplayName.GetLabel(_languageCode, optionSetMetadata.Name), "os_" + optionSetMetadata.Name, prefix);
         }
 
-        public string GetUniqueName(OptionMetadata optionMetadata, int languageCode)
+        public string GetUniqueName(OptionMetadata optionMetadata)
         {
             var suffix = string.Empty;
             var statusOptionMetadata = optionMetadata as StatusOptionMetadata;
@@ -41,7 +48,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
                 if (statusOptionMetadata.State == 0) suffix = "_Active";
                 else if (statusOptionMetadata.State == 1) suffix = "_Inactive";
             }
-            return GetUniqueName(optionMetadata.Label.GetLabel(languageCode, optionMetadata.Value.ToString()), "osv_" + optionMetadata.Value.ToString(), string.Empty, suffix);
+            return GetUniqueName(optionMetadata.Label.GetLabel(_languageCode, optionMetadata.Value.ToString()), "osv_" + optionMetadata.Value.ToString(), string.Empty, suffix);
         }
 
         public string GetUniqueName(string name, string key, string prefix = "", string suffix = "", int count = 1)
