@@ -24,7 +24,7 @@ namespace PentaWork.Tools.PowerPlatform.Tests.Fixtures
             var systemForms = new List<Entity> { BuildSystemForm() };
             var actions = new List<ActionInfo> { new ActionInfo("DoSomething", "new_DoSomething", "test_entity") };
 
-            return new EntityInfoList(entityMetadataList, systemForms, actions);
+            return new EntityInfoList(entityMetadataList, systemForms, actions, 1033);
         }
 
         private static EntityMetadata BuildMainEntityMetadata()

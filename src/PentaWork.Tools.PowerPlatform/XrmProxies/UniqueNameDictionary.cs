@@ -6,14 +6,21 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
 {
     public class UniqueNameDictionary : Dictionary<string, string>
     {
+        private readonly int _languageCode;
+
+        public UniqueNameDictionary(int languageCode = -1)
+        {
+            _languageCode = languageCode;
+        }
+
         public string GetUniqueName(EntityMetadata entityMetadata)
         {
-            return GetUniqueName(entityMetadata.DisplayName.GetLabel(entityMetadata.LogicalName), entityMetadata.LogicalName);
+            return GetUniqueName(entityMetadata.DisplayName.GetLabel(_languageCode, entityMetadata.LogicalName), entityMetadata.LogicalName);
         }
 
         public string GetUniqueName(AttributeMetadata attributeMetadata, string suffix = "")
         {
-            return GetUniqueName(attributeMetadata.DisplayName.GetLabel(attributeMetadata.LogicalName), attributeMetadata.LogicalName, string.Empty, suffix);
+            return GetUniqueName(attributeMetadata.DisplayName.GetLabel(_languageCode, attributeMetadata.LogicalName), attributeMetadata.LogicalName, string.Empty, suffix);
         }
 
         public string GetUniqueName(OneToManyRelationshipMetadata metadata)
@@ -29,7 +36,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
         public string GetUniqueName(OptionSetMetadata optionSetMetadata)
         {
             var prefix = optionSetMetadata.IsGlobal.Value ? "eg" : "e";
-            return GetUniqueName(optionSetMetadata.DisplayName.GetLabel(optionSetMetadata.Name), "os_" + optionSetMetadata.Name, prefix);
+            return GetUniqueName(optionSetMetadata.DisplayName.GetLabel(_languageCode, optionSetMetadata.Name), "os_" + optionSetMetadata.Name, prefix);
         }
 
         public string GetUniqueName(OptionMetadata optionMetadata)
@@ -41,7 +48,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
                 if (statusOptionMetadata.State == 0) suffix = "_Active";
                 else if (statusOptionMetadata.State == 1) suffix = "_Inactive";
             }
-            return GetUniqueName(optionMetadata.Label.GetLabel(optionMetadata.Value.ToString()), "osv_" + optionMetadata.Value.ToString(), string.Empty, suffix);
+            return GetUniqueName(optionMetadata.Label.GetLabel(_languageCode, optionMetadata.Value.ToString()), "osv_" + optionMetadata.Value.ToString(), string.Empty, suffix);
         }
 
         public string GetUniqueName(string name, string key, string prefix = "", string suffix = "", int count = 1)

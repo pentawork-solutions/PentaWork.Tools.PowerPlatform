@@ -204,6 +204,13 @@ dotnet pack src/PentaWork.Tools.PowerPlatform -c Release -o ./nupkg
 
 Continuous integration builds and tests on Ubuntu, Windows and macOS (see `.github/workflows/ci.yml`).
 
+## Building dev for local testing (overwriting isntalled version)
+
+```
+dotnet pack -c Release -o ./artifacts -p:PackageVersion=1.1.1-dev.1
+dotnet tool update --global PentaWork.Tools.PowerPlatform --source ./artifacts/ --version 1.1.1-dev.1 --no-cache
+```
+
 ## License
 
 [MIT](LICENSE)
