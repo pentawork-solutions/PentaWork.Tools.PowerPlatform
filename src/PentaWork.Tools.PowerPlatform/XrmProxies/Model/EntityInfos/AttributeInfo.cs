@@ -6,7 +6,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
 {
     public class AttributeInfo
     {
-        public AttributeInfo(AttributeMetadata attrMetadata, string uniqueDisplayName)
+        public AttributeInfo(AttributeMetadata attrMetadata, string uniqueDisplayName, int languageCode)
         {
             LogicalName = attrMetadata.LogicalName;
             UniqueDisplayName = uniqueDisplayName;
@@ -17,10 +17,10 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             SetXrmTypingValues(attrMetadata);
             SetNumericConstraints(attrMetadata);
             IsMultiSelectOptionSet = attrMetadata is MultiSelectPicklistAttributeMetadata;
-            DisplayLabel = attrMetadata.DisplayName.GetLabel(attrMetadata.LogicalName);
+            DisplayLabel = attrMetadata.DisplayName.GetLabel(languageCode, attrMetadata.LogicalName);
         }
 
-        public AttributeInfo(AttributeMetadata attrMetadata, string uniqueDisplayName, string returnType)
+        public AttributeInfo(AttributeMetadata attrMetadata, string uniqueDisplayName, string returnType, int languageCode)
         {
             LogicalName = attrMetadata.LogicalName;
             UniqueDisplayName = uniqueDisplayName;
@@ -31,7 +31,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             SetXrmTypingValues(attrMetadata);
             SetNumericConstraints(attrMetadata);
             IsMultiSelectOptionSet = attrMetadata is MultiSelectPicklistAttributeMetadata;
-            DisplayLabel = attrMetadata.DisplayName.GetLabel(attrMetadata.LogicalName);
+            DisplayLabel = attrMetadata.DisplayName.GetLabel(languageCode, attrMetadata.LogicalName);
         }
 
         private void SetNumericConstraints(AttributeMetadata attrMetadata)

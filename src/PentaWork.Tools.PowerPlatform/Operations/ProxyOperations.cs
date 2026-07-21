@@ -63,6 +63,7 @@ namespace PentaWork.Tools.PowerPlatform.Operations
                 }
             }
 
+            var languageCode = GetOrganizationBaseLanguageCode(connection, output);
             var sdkMessages = GetAllSdkMessages(connection, output);
             var actions = GetAllActions(connection, output);
             var entityMetadata = GetAllEntityMetadata(connection, sdkMessages, output);
@@ -75,7 +76,7 @@ namespace PentaWork.Tools.PowerPlatform.Operations
                 includeEntities.AddRange(entityMetadata.Where(e => solutionEntities.Any(s => s == e.MetadataId)).Select(e => e.LogicalName));
             }
             var filteredEntityMetadata = GetFilteredEntityMetaData(entityMetadata, includeEntities, request.ExcludeEntities);
-            var entityInfoList = new EntityInfoList(filteredEntityMetadata, systemForms, actions);
+            var entityInfoList = new EntityInfoList(filteredEntityMetadata, systemForms, actions, languageCode);
 
             EnsureFolder(request.OutputPath);
             EnsureFolder(request.EffectiveCSOutputPath);
@@ -96,6 +97,16 @@ namespace PentaWork.Tools.PowerPlatform.Operations
         internal static void EnsureFolder(string folderPath)
         {
             if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+        }
+
+        private static int GetOrganizationBaseLanguageCode(ServiceClient connection, IOperationOutput output)
+        {
+            output.WriteProgress("Generating", "Getting organization base language ...", 5);
+
+            var query = new QueryExpression("organization");
+            query.ColumnSet = new ColumnSet("languagecode");
+
+            return (int)connection.Query(query, true).First()["languagecode"];
         }
 
         private static List<Entity> GetAllSdkMessages(ServiceClient connection, IOperationOutput output)

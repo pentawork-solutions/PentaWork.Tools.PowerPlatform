@@ -8,11 +8,11 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
     {
         private readonly UniqueNameDictionary _optionNameDic = new UniqueNameDictionary();
 
-        public OptionSetInfo(OptionSetMetadata osMetadata, string uniqueDisplayName)
+        public OptionSetInfo(OptionSetMetadata osMetadata, string uniqueDisplayName, int languageCode)
         {
             LogicalName = osMetadata.Name;
             UniqueDisplayName = uniqueDisplayName;
-            Options = osMetadata.Options.Select(optionMetadata => new OptionInfo(optionMetadata, _optionNameDic.GetUniqueName(optionMetadata))).ToList();
+            Options = osMetadata.Options.Select(optionMetadata => new OptionInfo(optionMetadata, _optionNameDic.GetUniqueName(optionMetadata, languageCode), languageCode)).ToList();
         }
 
         public string LogicalName { get; }

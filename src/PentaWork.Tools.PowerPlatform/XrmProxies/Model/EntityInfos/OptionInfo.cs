@@ -4,12 +4,12 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
 {
     public class OptionInfo
     {
-        public OptionInfo(OptionMetadata optionMetadata, string uniqueValueName)
+        public OptionInfo(OptionMetadata optionMetadata, string uniqueValueName, int languageCode)
         {
-            DisplayName = optionMetadata.Label.GetLabel();
+            DisplayName = optionMetadata.Label.GetLabel(languageCode);
             UniqueValueName = uniqueValueName;
             Value = optionMetadata.Value.Value;
-            Description = optionMetadata.Description?.GetLabel() ?? string.Empty;
+            Description = optionMetadata.Description?.GetLabel(languageCode) ?? string.Empty;
         }
 
         public string DisplayName { get; }
