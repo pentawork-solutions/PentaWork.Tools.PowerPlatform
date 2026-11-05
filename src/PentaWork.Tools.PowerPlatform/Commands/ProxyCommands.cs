@@ -11,7 +11,7 @@ namespace PentaWork.Tools.PowerPlatform.Commands
     {
         public override ValueTask ExecuteAsync(IConsole console) =>
             RunWithConnectionAsync(console, null, (connection, output) =>
-                ProxyOperations.Generate(connection, new ProxyOperations.ProxyGenerateRequest(ProxyNamespace, FakeNamespace, Solution, Include, Exclude, OutputDirectory, Clear, UseBaseProxy, CSharpOutputDirectory, FakeOutputDirectory, TypeScriptOutputDirectory), output));
+                ProxyOperations.Generate(connection, new ProxyOperations.ProxyGenerateRequest(ProxyNamespace, FakeNamespace, Solution, Include, Exclude, OutputDirectory, Clear, UseBaseProxy, CSharpOutputDirectory, FakeOutputDirectory, TypeScriptOutputDirectory, UseLogicalNames), output));
 
         [CommandOption("proxy-namespace", Description = "Namespace for the generated C# proxy classes.")]
         public required string ProxyNamespace { get; set; }
@@ -45,5 +45,8 @@ namespace PentaWork.Tools.PowerPlatform.Commands
 
         [CommandOption("typescript-output-dir", Description = "Write TypeScript proxy output directly to this directory.")]
         public string? TypeScriptOutputDirectory { get; set; }
+
+        [CommandOption("use-logical-names", Description = "Name generated classes/properties after entity/attribute logical names (as-is) instead of display names. Option set enums get an e_/eg_ prefix.")]
+        public bool UseLogicalNames { get; set; }
     }
 }

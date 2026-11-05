@@ -27,7 +27,8 @@ namespace PentaWork.Tools.PowerPlatform.Operations
             bool UseBaseProxy,
             string? CSharpOutputDirectory,
             string? FakeOutputDirectory,
-            string? TypeScriptOutputDirectory)
+            string? TypeScriptOutputDirectory,
+            bool UseLogicalNames = false)
         {
             public string CSOutputPath => Path.Combine(OutputPath, "CS");
             public string TSOutputPath => Path.Combine(OutputPath, "TS");
@@ -76,7 +77,7 @@ namespace PentaWork.Tools.PowerPlatform.Operations
                 includeEntities.AddRange(entityMetadata.Where(e => solutionEntities.Any(s => s == e.MetadataId)).Select(e => e.LogicalName));
             }
             var filteredEntityMetadata = GetFilteredEntityMetaData(entityMetadata, includeEntities, request.ExcludeEntities);
-            var entityInfoList = new EntityInfoList(filteredEntityMetadata, systemForms, actions, languageCode);
+            var entityInfoList = new EntityInfoList(filteredEntityMetadata, systemForms, actions, languageCode, request.UseLogicalNames);
 
             EnsureFolder(request.OutputPath);
             EnsureFolder(request.EffectiveCSOutputPath);

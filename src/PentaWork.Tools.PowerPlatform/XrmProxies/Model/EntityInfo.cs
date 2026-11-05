@@ -9,9 +9,9 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
     {
         private readonly UniqueNameDictionary _varNameDic;
 
-        public EntityInfo(EntityMetadata entityMetadata, List<ActionInfo> actionList, string uniqueDisplayName, int languageCode)
+        public EntityInfo(EntityMetadata entityMetadata, List<ActionInfo> actionList, string uniqueDisplayName, int languageCode, bool useLogicalNames = false)
         {
-            _varNameDic = new UniqueNameDictionary(languageCode)
+            _varNameDic = new UniqueNameDictionary(languageCode, useLogicalNames)
             {
                 // Add the LogicalName of the entity to the dictionary - prevent Attribtues named equal to the wrapping type
                 { $"entity.{entityMetadata.LogicalName}", uniqueDisplayName }
@@ -20,6 +20,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             UniqueDisplayName = uniqueDisplayName;
             TypeCode = entityMetadata.ObjectTypeCode;
             LogicalName = entityMetadata.LogicalName;
+            UseLogicalNames = useLogicalNames;
 
             ActionList = actionList;
             OptionSetList = ParseOptionSets(entityMetadata, languageCode);
@@ -44,7 +45,8 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
                 metadata.IntersectEntityName,
                 metadata.SchemaName,
                 _varNameDic.GetUniqueName(metadata.SchemaName, metadata.SchemaName),
-                _varNameDic.GetUniqueName(metadata.IntersectEntityName, metadata.IntersectEntityName))
+                _varNameDic.GetUniqueName(metadata.IntersectEntityName, metadata.IntersectEntityName),
+                UseLogicalNames)
             {
                 Entity1Attribute = metadata.Entity1IntersectAttribute,
                 Entity1LogicalName = metadata.Entity1LogicalName,
@@ -119,6 +121,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
 
         public int? TypeCode { get; }
         public string LogicalName { get; }
+        public bool UseLogicalNames { get; }
         public string UniqueDisplayName { get; }
         public AttributeInfo PrimaryNameAttribute { get; }
         public AttributeInfo PrimaryIdAttribute { get; }

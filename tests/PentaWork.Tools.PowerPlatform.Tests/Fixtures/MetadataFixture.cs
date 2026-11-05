@@ -12,7 +12,7 @@ namespace PentaWork.Tools.PowerPlatform.Tests.Fixtures
     /// </summary>
     internal static class MetadataFixture
     {
-        public static EntityInfoList BuildEntityInfoList()
+        public static EntityInfoList BuildEntityInfoList(bool useLogicalNames = false)
         {
             var mainEntity = BuildMainEntityMetadata();
             var relatedEntity = BuildRelatedEntityMetadata();
@@ -24,7 +24,7 @@ namespace PentaWork.Tools.PowerPlatform.Tests.Fixtures
             var systemForms = new List<Entity> { BuildSystemForm() };
             var actions = new List<ActionInfo> { new ActionInfo("DoSomething", "new_DoSomething", "test_entity") };
 
-            return new EntityInfoList(entityMetadataList, systemForms, actions, 1033);
+            return new EntityInfoList(entityMetadataList, systemForms, actions, 1033, useLogicalNames);
         }
 
         private static EntityMetadata BuildMainEntityMetadata()

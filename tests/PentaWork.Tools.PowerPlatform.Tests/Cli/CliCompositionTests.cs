@@ -18,8 +18,7 @@ public class CliCompositionTests
                 DataExportCommand.Descriptor, DataImportCommand.Descriptor,
                 EntityExportCommand.Descriptor, EntityImportCommand.Descriptor, EntityRemoveCommand.Descriptor,
                 PluginGraphExportCommand.Descriptor, ProxyGenerateCommand.Descriptor, RelationImportCommand.Descriptor,
-                SharingImportCommand.Descriptor, SolutionExportCommand.Descriptor, SolutionImportCommand.Descriptor,
-                SolutionListCommand.Descriptor, UserObjectListCommand.Descriptor, WebResourceUpdateCommand.Descriptor
+                SharingImportCommand.Descriptor, SolutionListCommand.Descriptor, UserObjectListCommand.Descriptor, WebResourceUpdateCommand.Descriptor
             ])
             .UseConsole(console)
             .Build();
@@ -28,7 +27,7 @@ public class CliCompositionTests
 
         Assert.AreEqual(0, exitCode);
         var help = console.ReadOutputString();
-        foreach (var command in new[] { "assembly update", "connection test", "data export", "data import", "entity export", "entity import", "entity remove", "plugin-graph export", "proxy generate", "relation import", "sharing import", "solution export", "solution import", "solution list", "user-object list", "webresource update" })
+        foreach (var command in new[] { "assembly update", "connection test", "data export", "data import", "entity export", "entity import", "entity remove", "plugin-graph export", "proxy generate", "relation import", "sharing import", "solution list", "user-object list", "webresource update" })
             StringAssert.Contains(help, command);
     }
 }

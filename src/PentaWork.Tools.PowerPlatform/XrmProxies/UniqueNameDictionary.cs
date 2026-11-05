@@ -7,19 +7,32 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
     public class UniqueNameDictionary : Dictionary<string, string>
     {
         private readonly int _languageCode;
+        private readonly bool _useLogicalNames;
 
-        public UniqueNameDictionary(int languageCode = -1)
+        /// <param name="languageCode">Language used to resolve display name labels.</param>
+        /// <param name="useLogicalNames">
+        /// If true, entity/attribute/option set names are taken from their logical names as-is
+        /// (no casing changes, no "Id" suffix) instead of their localized display names.
+        /// </param>
+        public UniqueNameDictionary(int languageCode = -1, bool useLogicalNames = false)
         {
             _languageCode = languageCode;
+            _useLogicalNames = useLogicalNames;
         }
 
         public string GetUniqueName(EntityMetadata entityMetadata)
         {
-            return GetUniqueName(entityMetadata.DisplayName.GetLabel(_languageCode, entityMetadata.LogicalName), entityMetadata.LogicalName);
+            var name = _useLogicalNames
+                ? entityMetadata.LogicalName
+                : entityMetadata.DisplayName.GetLabel(_languageCode, entityMetadata.LogicalName);
+            return GetUniqueName(name, entityMetadata.LogicalName);
         }
 
         public string GetUniqueName(AttributeMetadata attributeMetadata, string suffix = "")
         {
+            if (_useLogicalNames)
+                return GetUniqueName(attributeMetadata.LogicalName, attributeMetadata.LogicalName);
+
             return GetUniqueName(attributeMetadata.DisplayName.GetLabel(_languageCode, attributeMetadata.LogicalName), attributeMetadata.LogicalName, string.Empty, suffix);
         }
 
@@ -35,6 +48,13 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
 
         public string GetUniqueName(OptionSetMetadata optionSetMetadata)
         {
+            if (_useLogicalNames)
+            {
+                // Logical names are lower case - separate the prefix with "_" for readability
+                var logicalPrefix = optionSetMetadata.IsGlobal.Value ? "eg_" : "e_";
+                return GetUniqueName(optionSetMetadata.Name, "os_" + optionSetMetadata.Name, logicalPrefix);
+            }
+
             var prefix = optionSetMetadata.IsGlobal.Value ? "eg" : "e";
             return GetUniqueName(optionSetMetadata.DisplayName.GetLabel(_languageCode, optionSetMetadata.Name), "os_" + optionSetMetadata.Name, prefix);
         }
@@ -55,10 +75,19 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
         {
             if (!ContainsKey(key))
             {
-                var uniqueName = name.AsValidVariableName();
-                uniqueName = Regex.Replace(uniqueName, $"({suffix})$", "", RegexOptions.IgnoreCase); //Remove suffix at end to avoid double suffix
-                uniqueName = Regex.Replace(uniqueName, $"^({prefix})", ""); //Remove prefix at end to avoid double prefix
-                uniqueName = prefix + uniqueName + suffix;
+                string uniqueName;
+                if (_useLogicalNames)
+                {
+                    // Keep the name as-is - only ensure it is a valid identifier
+                    uniqueName = (prefix + name + suffix).AsValidIdentifier();
+                }
+                else
+                {
+                    uniqueName = name.AsValidVariableName();
+                    uniqueName = Regex.Replace(uniqueName, $"({suffix})$", "", RegexOptions.IgnoreCase); //Remove suffix at end to avoid double suffix
+                    uniqueName = Regex.Replace(uniqueName, $"^({prefix})", ""); //Remove prefix at end to avoid double prefix
+                    uniqueName = prefix + uniqueName + suffix;
+                }
                 uniqueName = count > 1 ? uniqueName + count : uniqueName;
                 uniqueName = Regex.Replace(uniqueName, @"\t|\n|\r", "");
 

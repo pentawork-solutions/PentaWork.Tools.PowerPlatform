@@ -1,6 +1,6 @@
 using Bogus;
 using System;
-using FakeXrmEasy;
+using FakeXrmEasy.Abstractions;
 using System.Collections.Generic;
 using {{ ProxyNamespace }}.Entities;
 using {{ ProxyNamespace }}.Extensions;
@@ -21,7 +21,7 @@ namespace {{ FakeNamespace }}
 					Entity2Attribute = "{{ relation.RelatedEntityAttributeName }}",
 					Entity1LogicalName = "{{ EntityInfo.LogicalName }}",
 					Entity2LogicalName = "{{ relation.RelatedEntityInfo.LogicalName }}",
-					RelationshipType = XrmFakedRelationship.enmFakeRelationshipType.OneToMany
+					RelationshipType = XrmFakedRelationship.FakeRelationshipType.OneToMany
 				};
 
 {{~ end ~}}
@@ -35,7 +35,7 @@ namespace {{ FakeNamespace }}
 					Entity2Attribute = "{{ relation.Entity2Attribute }}",
 					Entity1LogicalName = "{{ relation.Entity1LogicalName }}",
 					Entity2LogicalName = "{{ relation.Entity2LogicalName }}",
-					RelationshipType = XrmFakedRelationship.enmFakeRelationshipType.ManyToMany
+					RelationshipType = XrmFakedRelationship.FakeRelationshipType.ManyToMany
 				};
 
 {{~ end ~}}

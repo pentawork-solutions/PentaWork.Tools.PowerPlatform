@@ -9,12 +9,12 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
     {
         private readonly UniqueNameDictionary _entityNameDic;
 
-        public EntityInfoList(List<EntityMetadata> entityMetadataList, List<Entity> systemForms, List<ActionInfo> actions, int languageCode)
+        public EntityInfoList(List<EntityMetadata> entityMetadataList, List<Entity> systemForms, List<ActionInfo> actions, int languageCode, bool useLogicalNames = false)
         {
-            _entityNameDic = new UniqueNameDictionary(languageCode);
+            _entityNameDic = new UniqueNameDictionary(languageCode, useLogicalNames);
 
             // First parse all entity information
-            ParseEntityMetadata(entityMetadataList, actions, languageCode);
+            ParseEntityMetadata(entityMetadataList, actions, languageCode, useLogicalNames);
             // Then parse all relation information - The relation information
             // holds a reference to the related entity information. Thats why
             // all entity information get parsed at a whole in the previous step.
@@ -22,9 +22,9 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             LoadSystemForms(systemForms);
         }
 
-        private void ParseEntityMetadata(List<EntityMetadata> entityMetadataList, List<ActionInfo> actions, int languageCode)
+        private void ParseEntityMetadata(List<EntityMetadata> entityMetadataList, List<ActionInfo> actions, int languageCode, bool useLogicalNames)
         {
-            AddRange(entityMetadataList.Select(e => new EntityInfo(e, actions.Where(a => a.PrimaryEntity == e.LogicalName).ToList(), _entityNameDic.GetUniqueName(e), languageCode)));
+            AddRange(entityMetadataList.Select(e => new EntityInfo(e, actions.Where(a => a.PrimaryEntity == e.LogicalName).ToList(), _entityNameDic.GetUniqueName(e), languageCode, useLogicalNames)));
         }
 
         private void ParseEntityRelationAttributes(List<EntityMetadata> entityMetadataList)

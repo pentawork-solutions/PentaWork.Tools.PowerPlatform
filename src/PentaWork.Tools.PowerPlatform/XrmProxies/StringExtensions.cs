@@ -42,6 +42,20 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies
             return codeDomprovider.IsValidIdentifier(validName) ? validName : $"@{validName}";
         }
 
+        /// <summary>
+        /// Makes the given name a valid C# identifier without changing its casing or underscores
+        /// (used for logical names, which are taken as-is).
+        /// </summary>
+        public static string AsValidIdentifier(this string name)
+        {
+            var validName = Regex.Replace(name ?? string.Empty, @"\W+", "");   // Replace non-word characters
+            if (Regex.IsMatch(validName, @"^\d+")) validName = $"_{validName}"; // Prefix "_" if string starts with number(s)
+            validName = string.IsNullOrEmpty(validName) ? "Empty" : validName;
+
+            var codeDomprovider = CodeDomProvider.CreateProvider("C#");
+            return codeDomprovider.IsValidIdentifier(validName) ? validName : $"@{validName}";
+        }
+
         public static string RemoveDiacritics(this string text)
         {
             // First replace defined diacritics with defined alternatives
