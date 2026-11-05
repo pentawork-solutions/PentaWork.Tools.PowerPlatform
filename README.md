@@ -1,6 +1,6 @@
 # PentaWork.Tools.PowerPlatform
 
-A cross-platform [.NET tool](https://learn.microsoft.com/dotnet/core/tools/global-tools) CLI (`pw-pp`) for Power Platform / Dataverse automation: solution export/import, entity export/import, sharings, relations, web resource/plugin assembly updates, C#/TypeScript proxy generation and plugin call-graph analysis.
+A cross-platform [.NET tool](https://learn.microsoft.com/dotnet/core/tools/global-tools) CLI (`pw-pp`) for Power Platform / Dataverse automation: entity export/import, sharings, relations, web resource/plugin assembly updates, C#/TypeScript proxy generation and plugin call-graph analysis.
 
 Built on `net10.0` and [`Microsoft.PowerPlatform.Dataverse.Client`](https://www.nuget.org/packages/Microsoft.PowerPlatform.Dataverse.Client); runs natively on Linux, macOS and Windows.
 
@@ -58,8 +58,6 @@ Available on every command:
 |---|---|
 | `connection test` | Verify the connection string resolves and authenticates. |
 | `solution list` | List installed, visible solutions. |
-| `solution export <unique-name> --output-dir <dir> [--extract-dir <dir> --clean]` | Export a solution to a zip file (optionally extracted). |
-| `solution import <zip>` | Import a solution from a zip file. |
 | `entity export <logical-name>` | Export entity instances (with columns, filters, relations, sharings) to JSON. |
 | `entity import` | Import entity instances from JSON. |
 | `entity remove <logical-name>` | **Destructive.** Delete entity instances matching a filter. |
@@ -68,16 +66,18 @@ Available on every command:
 | `relation import` | Import N:M relations from JSON. |
 | `sharing import` | Import entity sharings (POA) from JSON. |
 | `user-object list` | List per-user views, dashboards and charts. |
-| `proxy generate [--csharp-output-dir <dir>] [--fake-output-dir <dir>] [--typescript-output-dir <dir>]` | Generate C#/TypeScript proxy and FakeXrmEasy fake classes from live metadata. |
+| `proxy generate [--csharp-output-dir <dir>] [--fake-output-dir <dir>] [--typescript-output-dir <dir>] [--use-logical-names]` | Generate C#/TypeScript proxy and FakeXrmEasy fake classes from live metadata. |
 | `plugin-graph export` | Analyze plugin call graphs and render Markdown reports. |
 | `assembly update <dll>` | Update a plugin assembly's content/version. |
 | `webresource update <file> --name <name>` | Create or update a web resource. |
 
 Run `pw-pp <command> --help` or `pw-pp <command> <subcommand> --help` for the full option list of any command.
 
+Solution export/import/unpack is not part of `pw-pp` - use the [Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/reference/solution) (`pac solution export|import|unpack`) instead.
+
 ## Destructive commands
 
-`entity remove`, `solution import --delete-existing`, `proxy generate --clear` and `plugin-graph export --clear` execute immediately, without an interactive confirmation prompt - the same as the automation logic they're built on. Double-check the target environment before running them, especially in scripts.
+`entity remove`, `proxy generate --clear` and `plugin-graph export --clear` execute immediately, without an interactive confirmation prompt - the same as the automation logic they're built on. Double-check the target environment before running them, especially in scripts.
 
 `--clear` additionally refuses to delete the filesystem root or the current working directory, as a guard against a bad or empty `--output-dir`.
 
@@ -153,12 +153,6 @@ pw-pp data export --config config.json --output-dir ./data --connection-string "
 pw-pp data import --config config.json --input-dir ./data --fallback-owner-type systemuser --fallback-owner-id 00000000-0000-0000-0000-000000000001 --connection-string "$TARGET"
 ```
 
-**Solution export with automatic extraction:**
-
-```
-pw-pp solution export MySolution --output-dir ./solutions --extract-dir ./solutions/extracted --clean --connection-string "$SOURCE"
-```
-
 **Proxy generation with explicit output targets:**
 
 ```
@@ -170,9 +164,11 @@ while omitted C#, fake, or TypeScript targets fall back to `CS/`, `Fake/`, or `T
 Each effective target is independently validated by `--clear` against the root/workspace guard — the
 guard never allows deleting the filesystem root or the current working directory.
 
-`solution export --extract-dir <dir>` preserves unrelated existing files in `<dir>` and overwrites
-files included in the ZIP. Add `--clean` to delete `<dir>` first; `--clean` requires `--extract-dir`
-and uses the same root/workspace safety guard as the other destructive output options.
+By default, generated classes, properties and option set enums are named after the (localized)
+display names, converted to PascalCase. Pass `--use-logical-names` to name entities and attributes
+after their logical names exactly as-is (e.g. class `account`, property `new_customfield`, id
+property `accountid`). Option set enums then use the option set name with an `e_` (local) or `eg_`
+(global) prefix, e.g. `e_account_industrycode`; option values keep their label-based names.
 
 ### Filter triples
 

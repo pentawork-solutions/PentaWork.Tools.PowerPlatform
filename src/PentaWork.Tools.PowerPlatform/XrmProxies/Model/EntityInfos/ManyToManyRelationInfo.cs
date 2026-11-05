@@ -2,10 +2,13 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
 {
     public class ManyToManyRelationInfo
     {
-        private readonly UniqueNameDictionary _attrNameDic = new UniqueNameDictionary();
+        private readonly UniqueNameDictionary _attrNameDic;
+        private readonly string _attrSuffix;
 
-        public ManyToManyRelationInfo(EntityInfo relatedEntityInfo, string intersectEntityName, string schemaName, string uniqueDisplayName, string uniqueIntersectDisplayName)
+        public ManyToManyRelationInfo(EntityInfo relatedEntityInfo, string intersectEntityName, string schemaName, string uniqueDisplayName, string uniqueIntersectDisplayName, bool useLogicalNames = false)
         {
+            _attrNameDic = new UniqueNameDictionary(useLogicalNames: useLogicalNames);
+            _attrSuffix = useLogicalNames ? string.Empty : "Id"; // Logical names are used as-is
             IntersectEntityName = intersectEntityName;
             SchemaName = schemaName;
             RelatedEntityInfo = relatedEntityInfo;
@@ -29,7 +32,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             set
             {
                 _entity1Attribute = value;
-                UniqueEntity1AttributeName = _attrNameDic.GetUniqueName(_entity1Attribute, _entity1Attribute, string.Empty, "Id");
+                UniqueEntity1AttributeName = _attrNameDic.GetUniqueName(_entity1Attribute, _entity1Attribute, string.Empty, _attrSuffix);
             }
         }
 
@@ -40,7 +43,7 @@ namespace PentaWork.Tools.PowerPlatform.XrmProxies.Model
             set
             {
                 _entity2Attribute = value;
-                UniqueEntity2AttributeName = _attrNameDic.GetUniqueName(_entity2Attribute, _entity2Attribute, string.Empty, "Id");
+                UniqueEntity2AttributeName = _attrNameDic.GetUniqueName(_entity2Attribute, _entity2Attribute, string.Empty, _attrSuffix);
             }
         }
 

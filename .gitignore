@@ -3,3 +3,5 @@ obj/
 nupkg/
 TestResults/
 *.user
+.idea/
+artifacts/
